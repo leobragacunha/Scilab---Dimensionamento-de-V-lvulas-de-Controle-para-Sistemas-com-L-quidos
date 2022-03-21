@@ -1,0 +1,233 @@
+//Programa completo
+clc;
+clear;
+
+//messagebox(["Olá" "Este é um software para design de válvulas de controle" "Siga os passos na ordem indicada para realizar o dimensionamento adequado"],"Bem-vindo!")
+
+//1. Propriedades do Fluido (CONCLUIDO)
+    //Objetivo: identificar as propriedades do fluido em questão para verificar a neces    sidade de modificações no equacionamento convencional
+
+Titulo_fluido= "Forneça as informações a respeito do fluido";
+Titulo_vars= ["Vazão em GPM";"Pressão a montante (P1) em psia:";"Pressão a jusante (P2) em psia:";"Temperatura do fluido em ºF:"];
+
+[ok,Q,p1,p2,T]=getvalue(Titulo_fluido,Titulo_vars,list("vec",1,"vec",1,"vec",1,"vec",1),["0";"14.6959";"14.6959";"77"])
+
+Titulo_fluido2= "Com base na temperatura em questão ("+string(T)+" ºF), informe as demais propriedades:";
+Titulo_vars2= ["Pressão de vapor (Pv) em psia:";"Pressão crítica (Pc) em psia:";"Viscosidade em cP:";"Densidade relativa :"];
+
+[ok,Pv,Pc,mi,G]=getvalue(Titulo_fluido2,Titulo_vars2,list("vec",1,"vec",1,"vec",1,"vec",1),["0.25611";"3206";"0.8903";"1.0"])
+
+//2. Diâmetro de tubulação e de válvula (CONCLUIDO)
+    //Objetivo: registrar os valores de diâmetro da válvula e tubulação e, a partir deles, atribuir valores de Cvmax (para cálculo da abertura da válvula) e Fp
+di=list("Diâmetro da válvula em polegadas:",1,["2","3","4","6","8","10","12","14","16","18","20","24"]);
+Di=list("Diâmetro da tubulação em polegadas:",1,["2","3","4","6","8","10","12","14","16","18","20","24"]);
+
+escolha=x_choices("Selecione os diâmetros desejados:",list(di,Di));
+
+select escolha(1)
+    
+    case 1 then d=2;
+    case 2 then d=3;
+    case 3 then d=4;
+    case 4 then d=6;
+    case 5 then d=8;
+    case 6 then d=10;
+    case 7 then d=12;
+    case 8 then d=14;
+    case 9 then d=16;
+    case 10 then d=18;
+    case 11 then d=20;
+    case 12 then d=24;
+        
+end
+
+select escolha(2)
+    
+    case 1 then D=2;
+    case 2 then D=3;
+    case 3 then D=4;
+    case 4 then D=6;
+    case 5 then D=8;
+    case 6 then D=10;
+    case 7 then D=12;
+    case 8 then D=14;
+    case 9 then D=16;
+    case 10 then D=18;
+    case 11 then D=20;
+    case 12 then D=24;
+        
+end
+
+diam=d/D
+
+if diam>1 then
+    messagebox("O diâmetro da tubulação deve ser maior ou igual ao diâmetro da válvula","CUIDADO","warning")
+    
+    exit
+end
+    
+
+//3. Entrada de parâmetros da válvula (CONCLUIDO)
+    //Objetivo: Registrar valores de Fl, Kc, Fd e Flp para cada tipo de válvula
+
+//1 - Globo Sede simples plug simples
+//2 - Globo sede simples plug contornado normal aberta
+//3 - Globo sede simples plug contornado normal fechada
+//4 - Globo sede simples gaiola normal aberta
+//5 - Globo sede simples gaiola normal fechada
+//6 - Globo sede simples guiada pela lateral
+//7 - Globo sede dupla plug simples
+//8 - Globo sede dupla plug contornado
+//9 - Globo sede dupla guiada pela lateral
+//10 - Rotativa plug esférico excêntrico normal aberta
+//11 - Rotativa plug esférico excêntrico normal fechada
+//12 - Angular plug contornado normal aberta
+//13 - Angular gaiola normal aberta
+//14 - Angular gaiola normal fechada
+//15 - Angular venturi 
+//16 - Esfera segmentada
+//17 - Borboleta 60º
+//18 - Borboleta com lâmina flautada
+//19 - Borboleta 90º
+
+Valvula=list("Globo Sede simples plug simples","Globo sede simples plug contornado normal aberta","Globo sede simples plug contornado normal fechada","Globo sede simples gaiola normal aberta","Globo sede simples gaiola normal fechada","Globo sede simples guiada pela lateral","Globo sede dupla plug simples","Globo sede dupla plug contornado","Globo sede dupla guiada pela lateral","Rotativa plug esférico excêntrico normal aberta","Rotativa plug esférico excêntrico normal fechada","Angular plug contornado normal aberta","Angular gaiola normal aberta","Angular gaiola normal fechada","Angular venturi","Esfera segmentada","Borboleta 60º","Borboleta com lâmina flautada","Borboleta 90º")
+
+Fl=[0.9,0.9,0.8,0.9,0.85,0.9,0.9,0.85,0.9,0.85,0.68,0.9,0.85,0.8,0.5,0.6,0.68,0.7,0.6]
+Fd=[1,1,1,1,1,1,0.7,0.7,0.7,1,1,1,1,1,1,1,0.7,0.7,0.7]
+Cvd2=[9.5,1.1,1.1,14,16,1.1,12.5,13,14,12,13.5,17,12,12,22,25,17.5,25,29]
+
+//4. Cálculo do Cv da válvula (obtido pelo equacionamento do material SENAI) (CONCLUIDO)
+    //Objetivo, calcular Cv e os outros principais parâmetros do equacionamento
+    
+Cvcat=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Fp=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Fyl=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+FyL=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Fr1=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+FpCv=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Cv=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Re=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Fy2=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Cvreal=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+Fr2=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+for i=1:19 
+
+//Calculo de Cvmax
+Cvcat(i)=Cvd2(i)*(d^2)
+
+//Cálculo de Fp
+k1=0.5*(1-(d^2/D^2))^2;
+k2=1*(1-(d^2/D^2))^2;
+
+Fp(i)=1/(sqrt(1+(k1+k2)/890*(Cvcat(i)/d^2)))
+disp(Fp(i))
+//Cálculo de Ff
+Ff=0.96-0.28*sqrt(Pv/Pc);
+
+//Cálculo de Fy/Fl: será chamado de Fyl
+FyL(i)=sqrt((p1-Ff*Pv)/(p1-p2));
+
+//Cálculo de Fy (conhecido o valor de Fl, que geralmente é tabelado)
+Fy1(i)=FyL(i)*Fl(i);
+
+//Cálculo de FpCv
+FpCv(i)=Q/(Fr1(i)*sqrt((p1-p2)/G));
+
+//Cálculo de Cv (necessita de um valor de Fp, obtido após a escolha do diâmetro da válvula)
+Cv(i)=FpCv(i)/Fp(i);
+
+//Cálculo do número de Reynolds 
+gama=mi/G;
+Re(i)=(17300*Fd(i)*Q)/(gama*sqrt(FpCv(i)*Fl(i)))*((FpCv(i)^2*Fl(i)^2)/(890*D^2)+1)^(1/4)
+
+   if Re(i)<=56 then Fr2(i)=0.284
+    elseif Re(i)>56 & Re(i)<=66 then Fr2(i)=0.32
+    elseif Re(i)>66 & Re(i)<=79 then Fr2(i)=0.36
+    elseif Re(i)>79 & Re(i)<=94 then Fr2(i)=0.4
+    elseif Re(i)>94 & Re(i)<=110 then Fr2(i)=0.44
+    elseif Re(i)>110 & Re(i)<=130 then Fr2(i)=0.48
+    elseif Re(i)>130 & Re(i)<=154 then Fr2(i)=0.52
+    elseif Re(i)>154 & Re(i)<=188 then Fr2(i)=0.56
+    elseif Re(i)>188 & Re(i)<=230 then Fr2(i)=0.6
+    elseif Re(i)>230 & Re(i)<=278 then Fr2(i)=0.64
+    elseif Re(i)>278 & Re(i)<=340 then Fr2(i)=0.68
+    elseif Re(i)>340 & Re(i)<=471 then Fr2(i)=0.72
+    elseif Re(i)>471 & Re(i)<=620 then Fr2(i)=0.76
+    elseif Re(i)>620 & Re(i)<=980 then Fr2(i)=0.80
+    elseif Re(i)>980 & Re(i)<=1560 then Fr2(i)=0.84
+    elseif Re(i)>1560 & Re(i)<=2470 then Fr2(i)=0.88
+    elseif Re(i)>2470 & Re(i)<=4600 then Fr2(i)=0.92
+    elseif Re(i)>4800 & Re(i)<=10200 then Fr2(i)=0.96
+    elseif Re(i)>10200 then Fr2(i)=1
+end     
+if(Fp(i)<1) then
+    
+//Cálculo de Flp (feito quando Fp<1)
+//  OBS: O valor de Fp vem de acordo com o diâmetro
+
+kb=1-(d/D)^4;
+
+ki=k1+kb ;
+Flp(i)=1/sqrt((1/Fl(i)^2)+(ki*(Cvcat(i)/d^2)^2)/890);
+
+else Flp(i)=1
+    
+    end
+
+//Cálculo de correção de Fy
+Fy2(i)=FyL(i)*Flp(i);
+
+//Cálculo da velocidade de entrada (ventra em pés/s) 
+//  N10=0.408
+ventra=0.408*Q/d^2;
+
+//Cálculo de Cv corrigido pelo Fr;
+Cvreal(i)=FpCv(i)/(Fr2(i)*Flp(i));
+
+
+end
+//5. Teste de cavitação (CONCLUIDO)
+    //Objetivo: Verificar a ocorrência de cavitação no interior da válvula
+
+Kcmin=(p1-p2)/(p1-Pv);
+testecav=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+respcav=list("a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a")
+
+for i=1:19
+    
+//testecav(i)=Kc(i)-Kcmin;
+
+//if (testecav>0) 
+   // then respcav(i)="Não há cavitação."  
+   // else respcav(i)="Haverá cavitação dentro da válvula. Diminua a diferença de pressão no interior do equipamento."
+//end
+
+
+if (Fy2(i)>1) 
+    then  respcav(i)="Não há cavitação."  
+    else respcav(i)="Haverá cavitação dentro da válvula. Diminua a diferença de pressão no interior do equipamento."
+end
+end
+
+
+//6. Apresentação dos resultados
+    //Objetivo: identificar as propriedades do fluido em questão para verificar a necessidade de modificações no equacionamento convencional
+
+    
+    if p1>=85 then resppres="Altas pressões (perigoso mesmo em temperaturas ambientes)";
+    elseif p1<85 & p1>=14.6959 then resppres="Pressões normais";
+    elseif p1<14.6959 then resppres="Baixas pressões (atenção à possíveis contrafluxos)";
+
+end
+
+    if T>=200 then  resptemp="Altas temperaturas (atenção às temperaturas limites dos internos)";
+    elseif T<200 & T>=0 then resptemp="Temperaturas normais";
+    elseif T<0 then resptemp="Baixas temperaturas (atenção às temperaturas limites dos internos)";
+        
+end
+
+Daviso=6*D;
+
+messagebox (["Antes de decidir a válvula consulte SEMPRE tabelas de limites de pressão e temperatura.","Consulte também a dureza e resistência à corrosão dos materiais escolhidos.",".",resppres,resptemp,"É interessante um comprimento de tubulação de "+string(Daviso)+" polegadas antes e após a válvula para minimizar perturbações.",".","Informações dimensionais:","Diâmetro de tubulação:"+string(D)+" polegadas","Diâmetro de válvula:"+string(d)+" polegadas",".","Válvula: "+string(Valvula(1))"","Fd:"+string(Fd(1))+"  Fp:"+string(Fp(1))+"  Fl: "+string(Fl(1))+"  Flp: "+string(Flp(1))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(1))+"","Cv do catálogo: "+string(Cvcat(1))+" Cv: "+string(Cvreal(1))+"","Reynolds da válvula: "+string(Re(1))+"",respcav(1),".","Válvula: "+string(Valvula(2))"","Fd:"+string(Fd(2))+"  Fp:"+string(Fp(2))+"  Fl: "+string(Fl(2))+"  Flp: "+string(Flp(2))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(2))+"","Cv do catálogo: "+string(Cvcat(2))+" Cv: "+string(Cvreal(2))+"","Reynolds da válvula: "+string(Re(2))+"",respcav(2),".","Válvula: "+string(Valvula(3))"","Fd:"+string(Fd(3))+"  Fp:"+string(Fp(3))+"  Fl: "+string(Fl(3))+"  Flp: "+string(Flp(3))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(3))+"","Cv do catálogo: "+string(Cvcat(3))+" Cv: "+string(Cvreal(3))+"","Reynolds da válvula: "+string(Re(3))+"",respcav(3),".","Válvula: "+string(Valvula(4))"","Fd:"+string(Fd(4))+"  Fp:"+string(Fp(4))+"  Fl: "+string(Fl(4))+"  Flp: "+string(Flp(4))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(4))+"","Cv do catálogo: "+string(Cvcat(4))+" Cv: "+string(Cvreal(4))+"","Reynolds da válvula: "+string(Re(4))+"",respcav(4),".","Válvula: "+string(Valvula(5))"","Fd:"+string(Fd(5))+"  Fp:"+string(Fp(5))+"  Fl: "+string(Fl(5))+"  Flp: "+string(Flp(5))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(5))+"","Cv do catálogo: "+string(Cvcat(5))+" Cv: "+string(Cvreal(5))+"","Reynolds da válvula: "+string(Re(5))+"",respcav(5),".","Válvula: "+string(Valvula(6))"","Fd:"+string(Fd(6))+"  Fp:"+string(Fp(6))+"  Fl: "+string(Fl(6))+"  Flp: "+string(Flp(6))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(6))+"","Cv do catálogo: "+string(Cvcat(6))+" Cv: "+string(Cvreal(6))+"","Reynolds da válvula: "+string(Re(6))+"",respcav(6),".","Válvula: "+string(Valvula(7))"","Fd:"+string(Fd(7))+"  Fp:"+string(Fp(7))+"  Fl: "+string(Fl(7))+"  Flp: "+string(Flp(7))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(7))+"","Cv do catálogo: "+string(Cvcat(7))+" Cv: "+string(Cvreal(7))+"","Reynolds da válvula: "+string(Re(7))+"",respcav(7),".","Válvula: "+string(Valvula(8))"","Fd:"+string(Fd(8))+"  Fp:"+string(Fp(8))+"  Fl: "+string(Fl(8))+"  Flp: "+string(Flp(8))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(8))+"","Cv do catálogo: "+string(Cvcat(8))+" Cv: "+string(Cvreal(8))+"","Reynolds da válvula: "+string(Re(8))+"",respcav(8),".","Válvula: "+string(Valvula(9))"","Fd:"+string(Fd(9))+"  Fp:"+string(Fp(9))+"  Fl: "+string(Fl(9))+"  Flp: "+string(Flp(9))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(9))+"","Cv do catálogo: "+string(Cvcat(9))+" Cv: "+string(Cvreal(9))+"","Reynolds da válvula: "+string(Re(9))+"",respcav(9),".","Válvula: "+string(Valvula(10))"","Fd:"+string(Fd(10))+"  Fp:"+string(Fp(10))+"  Fl: "+string(Fl(10))+"  Flp: "+string(Flp(10))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(10))+"","Cv do catálogo: "+string(Cvcat(10))+" Cv: "+string(Cvreal(10))+"","Reynolds da válvula: "+string(Re(10))+"",respcav(10),".","Válvula: "+string(Valvula(11))"","Fd:"+string(Fd(11))+"  Fp:"+string(Fp(11))+"  Fl: "+string(Fl(11))+"  Flp: "+string(Flp(11))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(11))+"","Cv do catálogo: "+string(Cvcat(11))+" Cv: "+string(Cvreal(11))+"","Reynolds da válvula: "+string(Re(11))+"",respcav(11),".","Válvula: "+string(Valvula(12))"","Fd:"+string(Fd(12))+"  Fp:"+string(Fp(12))+"  Fl: "+string(Fl(12))+"  Flp: "+string(Flp(12))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(12))+"","Cv do catálogo: "+string(Cvcat(12))+" Cv: "+string(Cvreal(12))+"","Reynolds da válvula: "+string(Re(12))+"",respcav(12),".","Válvula: "+string(Valvula(13))"","Fd:"+string(Fd(13))+"  Fp:"+string(Fp(13))+"  Fl: "+string(Fl(13))+"  Flp: "+string(Flp(13))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(13))+"","Cv do catálogo: "+string(Cvcat(13))+" Cv: "+string(Cvreal(13))+"","Reynolds da válvula: "+string(Re(13))+"",respcav(13),".","Válvula: "+string(Valvula(14))"","Fd:"+string(Fd(14))+"  Fp:"+string(Fp(14))+"  Fl: "+string(Fl(14))+"  Flp: "+string(Flp(14))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(14))+"","Cv do catálogo: "+string(Cvcat(14))+" Cv: "+string(Cvreal(14))+"","Reynolds da válvula: "+string(Re(14))+"",respcav(14),".","Válvula: "+string(Valvula(15))"","Fd:"+string(Fd(15))+"  Fp:"+string(Fp(15))+"  Fl: "+string(Fl(15))+"  Flp: "+string(Flp(15))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(15))+"","Cv do catálogo: "+string(Cvcat(15))+" Cv: "+string(Cvreal(15))+"","Reynolds da válvula: "+string(Re(15))+"",respcav(15),".","Válvula: "+string(Valvula(16))"","Fd:"+string(Fd(16))+"  Fp:"+string(Fp(16))+"  Fl: "+string(Fl(16))+"  Flp: "+string(Flp(16))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(16))+"","Cv do catálogo: "+string(Cvcat(16))+" Cv: "+string(Cvreal(16))+"","Reynolds da válvula: "+string(Re(16))+"",respcav(16),".",,"Válvula: "+string(Valvula(17))"","Fd:"+string(Fd(17))+"  Fp:"+string(Fp(17))+"  Fl: "+string(Fl(17))+"  Flp: "+string(Flp(17))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(17))+"","Cv do catálogo: "+string(Cvcat(17))+" Cv: "+string(Cvreal(17))+"","Reynolds da válvula: "+string(Re(17))+"",respcav(17),".","Válvula: "+string(Valvula(18))"","Fd:"+string(Fd(18))+"  Fp:"+string(Fp(18))+"  Fl: "+string(Fl(18))+"  Flp: "+string(Flp(18))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(18))+"","Cv do catálogo: "+string(Cvcat(18))+" Cv: "+string(Cvreal(18))+"","Reynolds da válvula: "+string(Re(18))+"",respcav(18),".","Válvula: "+string(Valvula(19))"","Fd:"+string(Fd(19))+"  Fp:"+string(Fp(19))+"  Fl: "+string(Fl(19))+"  Flp: "+string(Flp(19))+"  Ff: "+string(Ff)+"  Fy: "+string(Fy2(19))+"","Cv do catálogo: "+string(Cvcat(19))+" Cv: "+string(Cvreal(19))+"","Reynolds da válvula: "+string(Re(19))+"",respcav(19)],["Informações complementares:"],"warning");
+
